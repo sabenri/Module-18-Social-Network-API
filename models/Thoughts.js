@@ -1,4 +1,4 @@
-const { Schema, model, default: mongoose, get } = require('mongoose');
+const { Schema, model} = require('mongoose');
 
 const reactionSchema = new Schema (
     {
