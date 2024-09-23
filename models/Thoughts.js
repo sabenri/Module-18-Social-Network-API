@@ -1,4 +1,4 @@
-const { Schema, model, default: mongoose } = require('mongoose');
+const { Schema, model, default: mongoose, get } = require('mongoose');
 
 const reactionSchema = new Schema (
     {
@@ -27,3 +27,35 @@ const reactionSchema = new Schema (
     id: false
 }    
 );
+
+const thoughtSchema = new Schema(
+    {
+        thoughtText: {
+            type: String,
+            required: true,
+            maxLength: 280,
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now, 
+            get: (date) => timeStamp(date)
+        },
+        username: {
+            type: String,
+            required: true,
+        },
+        reactions: [reactionSchema],
+    },
+    {
+        toJSON: {
+            virtuals: true,
+            getters: true, 
+        },
+        id: false,
+    }
+);
+
+const Thought = model('Thought', thoughtSchema);
+
+module.exports = Thought;
+
