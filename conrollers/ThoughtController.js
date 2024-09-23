@@ -1,5 +1,4 @@
 const {User, Thought } = require ('../models');
-const { create } = require('../models/Thoughts');
 
 module.exports = {
     async getThoughts(req, res) {
@@ -66,4 +65,63 @@ module.exports = {
         }
     },
 
-}
+    async deleteThought(req,res) {
+        try {
+            const thought = await Thought.findOneAndDelete({_id: req.params.thoughtIdhought});
+
+            if (!thought) {
+                return res.status(404).json({ message: 'Unable To Delete Thought. Invalid ID'});
+            }
+
+            const user = await User.findOneAndUpdate(
+                { thoughts: req.params.thoughtId},
+                { $pull: { thoughts: req.params.thoughtId}},
+                {new: true}
+            );
+            if (!user){
+                return res.status(404).json({ message: "Thought Deleted But Doesn't Belong To A User"});
+            }
+            res.json({message:'Thought And User Data Updated'});
+        } catch (err) {
+            console.error('DELETE THOUGHT ERROR: ${err}');
+            res.status(500).json({ message: 'Failed To Delete The Thought', error: err});
+        }
+    },
+    async createReaction(req, res) {
+        try {
+            const thought = await Thought.findOneAndUpdate(
+                {_id: req.params.thoughtId},
+                { $push: {reactions: req.body}},
+                { new: true, runValidators: true}
+            );
+            if (!thought) {
+                return res.status(404).json({ message: 'No Thought Found With That ID'})
+            }
+            res.json(thought);
+        } catch (err) {
+            console.error('ADD REACTION ERROR: ${err}');
+            res.status(500).json({message: 'Failed To Add The Reaction', error: err});
+        }
+    },
+
+    async deleteReaction(req, res) {
+        try {
+            console.log('Attempting To Delete Reaction with ID: ${req.params.reactionId} from thought with ID: ${req.params.thoughtId}');
+
+            const thought = await Thought.findOneAndUpdate(
+                {_id: req.params.thoughtId},
+                { $pull: {reactions:{_id: req.params.reactionId}}},
+                { new: true, runValidators: true}
+            );
+
+            if(!thought) {
+                return res.status(404).json({message: 'No Thought Found With That ID'});
+            }
+
+            res.json(thought);
+        } catch (err) {
+            console.error('DELETE REACTION ERROR: ${err}');
+            res.status(500).json({ message: 'Failed To Delete The Reaction', error: err});
+        }
+    }
+};
